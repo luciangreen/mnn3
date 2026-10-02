@@ -40,6 +40,9 @@ Generated text can be saved with `create_project_artifact/6`:
        demo, 'reports/summary.md', markdown, 'Summary report',
        [report_requirement], "# Summary\n\nHuman review required.\n").
 ?- mnn3:create_completion_report(demo, Completion).
+?- mnn3:create_manifest(demo, Manifest).
+?- mnn3:run_internal_pure_test(
+       assert_equal(5, add(integer(2), integer(3))), Result).
 ```
 
 Paths are workspace-relative. Parent directories are created only under the
@@ -58,6 +61,8 @@ home directory, or a directory containing sensitive files.
 - Static Prolog capability warnings, a deliberately small arithmetic/boolean
   pure-test interpreter, requirement test-case scaffolding, workflow variants,
   and a fail-closed baseline for optional integrations.
+- A Prolog-term artifact manifest and completion report; generated workspace
+  files are ignored by Git by default.
 - Security, unit, and end-to-end regression tests.
 
 Generated Prolog that appears to use shell, process, socket, HTTP, pipe, or

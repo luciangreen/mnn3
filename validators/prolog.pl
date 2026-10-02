@@ -2,7 +2,8 @@
 
 static_scan(Content, Status, Findings) :-
     to_string(Content, Text),
-    findall(Pattern, detected_pattern(Text, Pattern), Findings0),
+    string_lower(Text, Lower),
+    findall(Pattern, detected_pattern(Lower, Pattern), Findings0),
     sort(Findings0, Findings),
     (Findings == [] -> Status = clear ; Status = human_review_required).
 
@@ -18,6 +19,13 @@ detected_pattern(Text, sensitive_module_import) :-
     contains(Text, "library(process)") ;
     contains(Text, "library(socket)") ;
     contains(Text, "library(http/http_open)").
+detected_pattern(Text, credential_literal) :-
+    contains(Text, "api_key = '") ;
+    contains(Text, "api_key = \"") ;
+    contains(Text, "password = '") ;
+    contains(Text, "password = \"") ;
+    contains(Text, "token = '") ;
+    contains(Text, "token = \"").
 
 contains(Text, Substring) :- sub_string(Text, _, _, _, Substring).
 

@@ -19,14 +19,15 @@ validate_task_graph(Tasks) :-
            (is_list(Dependencies), maplist(member_of(Ids), Dependencies))),
     forall(member(task(Id, _, Dependencies, _), Tasks),
            \+ memberchk(Id, Dependencies)),
-    topological_order(Tasks, _).
+    topological_order(Tasks, _),
+    !.
 
 member_of(Ids, Id) :- memberchk(Id, Ids).
 
 topological_order(Tasks, Order) :-
     validate_graph_edges(Tasks),
     findall(Id, member(task(Id, _, _, _), Tasks), Ids),
-    topological_loop(Tasks, Ids, [], Order).
+    once(topological_loop(Tasks, Ids, [], Order)).
 
 validate_graph_edges(Tasks) :-
     is_list(Tasks),

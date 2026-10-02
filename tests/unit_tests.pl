@@ -6,6 +6,10 @@
 :- use_module('../prolog/test_generator').
 :- use_module('../prolog/verification').
 :- use_module('../prolog/mnn3').
+:- use_module('../prolog/workflow_library').
+:- use_module('../prolog/workflow_aioc').
+:- use_module('../prolog/reviewer', [review_artifact/3]).
+:- use_module(library(lists), [memberchk/2]).
 
 test(goal_is_structured_and_plannable) :-
     make_goal(g1, "Build an artifact", [], [source, tests], [artifact_only], Goal),
@@ -35,5 +39,15 @@ test(security_invariants_keep_kernel_enabled) :-
         credential_access(false), arbitrary_process_execution(false),
         arbitrary_filesystem(false), third_party_side_effects(false),
         workspace_artifact_generation(true))).
+
+test(all_ablations_keep_security_kernel) :-
+    forall(workflow_variant(_, Features), memberchk(security_kernel, Features)).
+
+test(unknown_workflow_is_rejected_by_optimiser) :-
+    compare_workflows(not_an_ablation, 'MNN3-0', rejected(not_an_ablation)).
+
+test(networking_artifact_requires_human_review) :-
+    review_artifact(javascript, "fetch('https://example.invalid')",
+                    review(human_review_required, [browser_network])).
 
 :- end_tests(mnn3_unit).

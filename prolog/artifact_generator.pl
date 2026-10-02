@@ -3,7 +3,8 @@
             generated_artifacts/1
           ]).
 
-:- use_module('../security/workspace', [create_artifact/3]).
+:- use_module('../security/workspace',
+              [create_artifact/3, validate_artifact_content/2]).
 :- use_module('../security/capability', [request_capability/4]).
 :- use_module(reviewer, [review_artifact/3]).
 :- use_module(provenance, [record_provenance/5]).
@@ -13,6 +14,7 @@
 
 generate_artifact(ProjectId, RelativePath, Type, Purpose, Requirements, Content) :-
     request_capability(mnn3, validate_artifact, artifact(RelativePath), allow),
+    validate_artifact_content(Type, Content),
     review_artifact(Type, Content, Review),
     create_artifact(RelativePath, Type, Content),
     record_provenance(RelativePath, Requirements, [], [], 1),

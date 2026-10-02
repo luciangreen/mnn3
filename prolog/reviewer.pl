@@ -10,11 +10,13 @@ review_artifact(Type, Content, review(Status, Findings)) :-
         Findings = []
     ).
 
-code_type(source_code, prolog).
-code_type(tests, prolog).
+code_type(source_code, generic_code).
+code_type(tests, generic_code).
 code_type(prolog_facts, prolog).
+code_type(javascript, javascript).
+code_type(html, javascript).
+code_type(css, javascript).
 
 review_status(clear, statically_checked).
 review_status(human_review_required, human_review_required).
 review_status(not_applicable, static_checks_limited).
-

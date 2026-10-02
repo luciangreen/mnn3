@@ -19,11 +19,17 @@ test(project_plan_records_trace_and_safe_generation,
                                   markdown, 'Test report', [report_requirement],
                                   review(static_checks_limited, []))]),
     create_completion_report(integration_project, Completion),
-    sub_string(Completion, _, _, _, "External execution was not performed").
+    sub_string(Completion, _, _, _, "No generated test program was executed"),
+    sub_string(Completion, _, _, _, "MNN2 interpretation"),
+    create_manifest(integration_project, Manifest),
+    sub_string(Manifest, _, _, _, "manifest(version(1)"),
+    read_artifact('manifest.pl', SavedManifest),
+    SavedManifest == Manifest.
 
 create_integration_workspace(Root) :-
     tmp_file(mnn3_integration_workspace, Root),
-    make_directory(Root).
+    make_directory(Root),
+    !.
 
 remove_integration_workspace(Root) :-
     catch(delete_directory_and_contents(Root), _, true).

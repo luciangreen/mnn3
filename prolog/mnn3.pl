@@ -29,6 +29,7 @@
 :- use_module('../adapters/mnn2_adapter', [mnn2_status/1]).
 :- use_module(task_graph, [topological_order/2]).
 :- use_module(reviewer, [review_artifact/3]).
+:- use_module(library(lists), [member/2]).
 
 plan_project(ProjectId, Description, Outputs, Plan, Trace) :-
     make_goal(ProjectId, Description, [], Outputs, [artifact_only], Goal),
@@ -55,9 +56,15 @@ create_completion_report(ProjectId, Report) :-
 
 create_manifest(ProjectId, Manifest) :-
     project_artifacts(ProjectId, Artifacts),
-    format(string(Manifest),
-           '# Artifact manifest~n~nThis manifest is descriptive data; generated artifacts were not executed.~n~n| Path | Type | Purpose | Requirements | Review |~n| --- | --- | --- | --- | --- |~n~w',
-           [Artifacts]).
+    findall(record(Path, Type, Purpose, Requirements, Review, []),
+            member(artifact(Path, Type, Purpose, Requirements, Review, _), Artifacts),
+            Records),
+    with_output_to(string(Manifest),
+                   write_term(current_output, manifest(version(1), Records),
+                              [quoted(true), numbervars(true), fullstop(true), nl(true)])),
+    create_project_artifact(ProjectId, 'manifest.pl', prolog_facts,
+                            'Machine-readable artifact manifest',
+                            [artifact_manifest], Manifest).
 
 runtime_security_invariants(invariants(
     network_access(false),
@@ -69,4 +76,3 @@ runtime_security_invariants(invariants(
     third_party_side_effects(false),
     workspace_artifact_generation(true)
 )).
-
