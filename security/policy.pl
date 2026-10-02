@@ -18,6 +18,3 @@ known_agent(reviewer_agent).
 known_agent(documentation_agent).
 
 human_export_action(human_controlled_export).
-human_export_action(deploy).
-human_export_action(publish).
-human_export_action(upload).

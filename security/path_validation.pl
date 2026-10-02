@@ -1,5 +1,9 @@
 :- module(mnn3_path_validation, [safe_workspace_path/3]).
 
+:- use_module(library(apply), [maplist/2, maplist/3]).
+:- use_module(library(filesex), [directory_file_path/3]).
+:- use_module(library(lists), [append/3]).
+
 safe_workspace_path(Root, RelativePath, Operation) :-
     canonical_root(Root, CanonicalRoot),
     relative_segments(RelativePath, Segments),
@@ -38,7 +42,8 @@ valid_segment(Segment) :-
     Segment \= ".",
     Segment \= "..",
     \+ sub_string(Segment, _, _, _, "~"),
-    \+ string_codes(Segment, Codes), memberchk(0, Codes).
+    string_codes(Segment, Codes),
+    \+ memberchk(0, Codes).
 
 resolve_existing(Root, Segments, AbsolutePath) :-
     join_under_root(Root, Segments, Candidate),
@@ -59,7 +64,8 @@ resolve_write_target(Root, Segments, AbsolutePath) :-
                                   file_errors(fail)]),
               _, fail),
         path_within(Root, Canonical)
-    ;   Canonical = Candidate
+    ;   \+ symbolic_link(Candidate),
+        Canonical = Candidate
     ),
     AbsolutePath = Canonical.
 
@@ -73,6 +79,7 @@ ensure_parent_directories(Root, [Segment|Rest], Parent) :-
               _, fail),
         path_within(Root, Canonical)
     ;   \+ exists_file(Candidate),
+        \+ symbolic_link(Candidate),
         catch(make_directory(Candidate), _, fail),
         catch(absolute_file_name(Candidate, Canonical,
                                  [file_type(directory), access(read),
@@ -89,3 +96,6 @@ join_under_root(Root, Segments, Candidate) :-
 path_within(Root, Candidate) :-
     atom_concat(Root, '/', Prefix),
     (Candidate == Root ; sub_atom(Candidate, 0, _, _, Prefix)).
+
+symbolic_link(Path) :-
+    catch(read_link(Path, _, _), _, fail).

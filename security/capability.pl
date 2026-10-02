@@ -4,6 +4,8 @@
             delegate_capabilities/3
           ]).
 
+:- use_module(library(apply), [maplist/2]).
+:- use_module(library(lists), [subset/2]).
 :- use_module(policy, [allowed_capability/1, known_agent/1, human_export_action/1]).
 
 request_capability(Agent, Capability, Resource, Decision) :-
@@ -34,7 +36,8 @@ valid_resource(artifact(Id)) :- safe_identifier(Id).
 valid_resource(artifacts(Ids)) :- is_list(Ids), maplist(safe_identifier, Ids).
 valid_resource(pure_test(Id)) :- safe_identifier(Id).
 
-safe_path_term(Path) :- atom(Path), Path \== ''.
+safe_path_term(Path) :- atom(Path), Path \== '', !.
+safe_path_term(Path) :- string(Path), Path \== "".
 safe_identifier(Id) :- atom(Id), Id \== ''.
 
 delegate_capabilities(ParentCapabilities, Requested, Delegated) :-
