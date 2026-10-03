@@ -18,13 +18,14 @@
 
 configure_workspace(Directory) :-
     (   exists_directory(Directory),
-        catch(absolute_file_name(Directory, Root,
+        catch(absolute_file_name(Directory, Requested,
                                  [file_type(directory), access(read),
                                   solutions(first), file_errors(fail)]),
               _, fail),
+        \+ workspace_symbolic_link(Requested),
+        real_directory(Requested, Root),
         Root \== '/',
-        \+ workspace_symbolic_link(Root),
-        root_has_no_symlink_components(Root)
+        \+ workspace_symbolic_link(Root)
     ->  with_mutex(mnn3_workspace, (retractall(configured_root(_)),
                                     assertz(configured_root(Root)),
                                     retractall(artifact_record(_, _, _))))
@@ -103,16 +104,22 @@ supported_artifact_type(Type) :-
                      configuration, schema, report, specification,
                      documentation, repository_structure]).
 
-root_has_no_symlink_components(Root) :-
-    atom_string(Root, RootString),
-    split_string(RootString, "/", "", Segments),
-    root_components_are_real('/', Segments).
+real_directory(Path, Real) :-
+    atom_string(Path, PathString),
+    split_string(PathString, "/", "", Segments),
+    real_components('/', Segments, Real).
 
-root_components_are_real(_, []).
-root_components_are_real(Current, [Segment|Rest]) :-
-    directory_file_path(Current, Segment, Candidate),
-    \+ workspace_symbolic_link(Candidate),
-    root_components_are_real(Candidate, Rest).
+real_components(Current, [], Current).
+real_components(Current, [Segment|Rest], Final) :-
+    (   Segment == ""
+    ->  Next = Current
+    ;   directory_file_path(Current, Segment, Candidate),
+        (   catch(read_link(Candidate, _, Target), _, fail)
+        ->  Next = Target
+        ;   Next = Candidate
+        )
+    ),
+    real_components(Next, Rest, Final).
 
 workspace_symbolic_link(Path) :-
     catch(read_link(Path, _, _), _, fail).
