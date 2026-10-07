@@ -18,7 +18,9 @@ generate_artifact(ProjectId, RelativePath, Type, Purpose, Requirements, Content)
     review_artifact(Type, Content, Review),
     create_artifact(RelativePath, Type, Content),
     record_provenance(RelativePath, Requirements, [], [], 1),
-    Artifact = artifact(RelativePath, Type, Purpose, Requirements, Review, generated),
+    validation_status(Review, ValidationStatus),
+    Artifact = artifact(RelativePath, Type, Purpose, Requirements, Review,
+                        ValidationStatus),
     with_mutex(mnn3_artifacts,
                ( retractall(generated_artifact_record(ProjectId, RelativePath,
                                                       _, _, _, _)),
@@ -33,3 +35,7 @@ generated_artifacts(Artifacts) :-
             generated_artifact_record(ProjectId, Path, Type, Purpose, Requirements,
                                       Review),
             Artifacts).
+
+validation_status(review(human_review_required, _), human_review_required) :- !.
+validation_status(review(statically_checked, _), statically_checked) :- !.
+validation_status(_, generated).

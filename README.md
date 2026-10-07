@@ -58,6 +58,8 @@ home directory, or a directory containing sensitive files.
 - Workspace-relative artifact read/write and size/count limits.
 - Deterministic goal decomposition, dependency-checked task ordering, project
   trace, assumptions, decisions, revisions, provenance, and completion report.
+- Requirement-to-implementation/test traceability checks and artifact-spec
+  dependency validation; completion reports distinguish missing mappings.
 - Static Prolog capability warnings, a deliberately small arithmetic/boolean
   pure-test interpreter, requirement test-case scaffolding, workflow variants,
   and a fail-closed baseline for optional integrations.

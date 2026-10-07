@@ -10,7 +10,7 @@
 :- dynamic project_state/7.
 :- dynamic project_event/3.
 
-:- use_module(library(lists), [append/3, member/2]).
+:- use_module(library(lists), [append/3, exclude/3, member/2]).
 
 start_project(Id, Goal, Tasks) :-
     atom(Id),
@@ -42,14 +42,18 @@ project_trace(Id, Trace) :-
     atomics_to_string(Lines, "\n", Trace).
 
 register_project_artifact(Id, Artifact) :-
+    Artifact = artifact(Path, _, _, _, _, _),
     with_mutex(mnn3_projects,
                ( retract(project_state(Id, Goal, Tasks, Artifacts, Decisions,
                                        Questions, Status)),
-                 append(Artifacts, [Artifact], UpdatedArtifacts),
+                 exclude(artifact_at_path(Path), Artifacts, RetainedArtifacts),
+                 append(RetainedArtifacts, [Artifact], UpdatedArtifacts),
                  assertz(project_state(Id, Goal, Tasks, UpdatedArtifacts,
                                        Decisions, Questions, Status))
                )),
     add_project_event(Id, 'An artifact was generated and added to the project trace.').
+
+artifact_at_path(Path, artifact(Path, _, _, _, _, _)).
 
 project_artifacts(Id, Artifacts) :-
     project_state(Id, _, _, Artifacts, _, _, _).
