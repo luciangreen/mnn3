@@ -8,6 +8,8 @@
             request_capability/4,
             run_internal_pure_test/2,
             runtime_security_invariants/1,
+            verify_requirement_traceability/4,
+            validate_project_specs/2,
             mnn1_status/1,
             mnn2_status/1
           ]).
@@ -28,6 +30,8 @@
 :- use_module('../adapters/mnn1_adapter', [mnn1_status/1]).
 :- use_module('../adapters/mnn2_adapter', [mnn2_status/1]).
 :- use_module(task_graph, [topological_order/2]).
+:- use_module(verification, []).
+:- use_module('../validators/project', []).
 :- use_module(reviewer, [review_artifact/3]).
 :- use_module(library(lists), [member/2]).
 
@@ -45,6 +49,13 @@ plan_project(ProjectId, Description, Outputs, Plan, Trace) :-
            'Created a deterministic artifact-only plan with tasks: ~w. The security kernel remains active.',
            [OrderedTasks]).
 
+verify_requirement_traceability(Requirements, Implementations, Tests, Result) :-
+    mnn3_verification:verify_requirement_traceability(
+        Requirements, Implementations, Tests, Result).
+
+validate_project_specs(Specs, Result) :-
+    mnn3_project_validator:validate_project_specs(Specs, Result).
+
 create_project_artifact(ProjectId, Path, Type, Purpose, Requirements, Content) :-
     generate_artifact(ProjectId, Path, Type, Purpose, Requirements, Content).
 
@@ -56,11 +67,12 @@ create_completion_report(ProjectId, Report) :-
 
 create_manifest(ProjectId, Manifest) :-
     project_artifacts(ProjectId, Artifacts),
-    findall(record(Path, Type, Purpose, Requirements, Review, []),
-            member(artifact(Path, Type, Purpose, Requirements, Review, _), Artifacts),
+    findall(record(Path, Type, Purpose, Requirements, Review, Status, []),
+            member(artifact(Path, Type, Purpose, Requirements, Review, Status),
+                   Artifacts),
             Records),
     with_output_to(string(Manifest),
-                   write_term(current_output, manifest(version(1), Records),
+                   write_term(current_output, manifest(version(2), Records),
                               [quoted(true), numbervars(true), fullstop(true), nl(true)])),
     create_project_artifact(ProjectId, 'manifest.pl', prolog_facts,
                             'Machine-readable artifact manifest',

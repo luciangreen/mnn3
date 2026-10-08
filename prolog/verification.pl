@@ -1,8 +1,11 @@
 :- module(mnn3_verification,
           [ verification_status/3,
-            verify_project_requirements/3
+            verify_project_requirements/3,
+            verify_requirement_traceability/4
           ]).
 
+:- use_module('../validators/requirements',
+              [validate_requirement_traceability/4]).
 :- use_module(library(lists), [subtract/3]).
 
 verification_status(generated, generated, []).
@@ -18,3 +21,6 @@ verify_project_requirements(RequiredPaths, ProducedPaths,
     is_list(ProducedPaths),
     subtract(RequiredPaths, ProducedPaths, Missing),
     (Missing == [] -> Status = complete ; Status = incomplete).
+
+verify_requirement_traceability(Requirements, Implementations, Tests, Result) :-
+    validate_requirement_traceability(Requirements, Implementations, Tests, Result).
