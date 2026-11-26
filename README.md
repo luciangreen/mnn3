@@ -94,3 +94,13 @@ hard-link risks.
 No artifact is deployed, published, uploaded, committed remotely, or otherwise
 sent outside the workspace. A human must review and separately handle any
 external use.
+
+## Refusals
+
+`create_artifact/4` gives `created` or `refused(Reason)`, where Reason is
+`capability_denied`, `unsafe_path`, `unsupported_type`, `artifact_too_large`,
+`too_many_artifacts`, `project_too_large` or `write_failed`.
+`create_artifact/3` succeeds only when the file was created. The path's form
+and every limit are checked before any folder is made, so a refused write
+leaves the workspace unchanged. Limits count the files already in the
+workspace, which are scanned once per workspace, so they hold after a restart.
