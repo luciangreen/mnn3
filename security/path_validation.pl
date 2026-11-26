@@ -1,4 +1,4 @@
-:- module(mnn3_path_validation, [safe_workspace_path/3]).
+:- module(mnn3_path_validation, [safe_workspace_path/3, valid_relative_path/1]).
 
 :- use_module(library(apply), [maplist/2, maplist/3]).
 :- use_module(library(filesex), [directory_file_path/3]).
@@ -14,6 +14,12 @@ safe_workspace_path(Root, RelativePath, Operation) :-
     ->  resolve_write_target(CanonicalRoot, Segments, AbsolutePath)
     ;   fail
     ).
+
+% The path's own form is acceptable: relative, with no parent steps,
+% protected names or forbidden characters. Touches nothing on disk.
+valid_relative_path(RelativePath) :-
+    relative_segments(RelativePath, Segments),
+    \+ protected_segments(Segments).
 
 canonical_root(Root, CanonicalRoot) :-
     catch(absolute_file_name(Root, CanonicalRoot,

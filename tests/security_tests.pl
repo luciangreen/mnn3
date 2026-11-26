@@ -116,6 +116,40 @@ test(workspace_rejects_generated_artifact_over_limit,
     string_codes(Content, Codes),
     \+ create_artifact('too-large.txt', plain_text, Content).
 
+test(refused_write_leaves_no_new_folders,
+     [setup(create_test_workspace(Root)), cleanup(remove_test_workspace(Root))]) :-
+    forall(between(1, 50, I),
+           ( format(atom(Name), 'f~w.md', [I]),
+             directory_file_path(Root, Name, Path),
+             setup_call_cleanup(open(Path, write, S), write(S, x), close(S)) )),
+    configure_workspace(Root),
+    create_artifact('newdir/a.md', markdown, "hi", Result),
+    assertion(Result == refused(too_many_artifacts)),
+    directory_file_path(Root, newdir, NewDir),
+    assertion(\+ exists_directory(NewDir)).
+
+test(existing_files_count_after_restart,
+     [setup(create_test_workspace(Root)), cleanup(remove_test_workspace(Root))]) :-
+    forall(between(1, 50, I),
+           ( format(atom(Name), 'f~w.md', [I]),
+             directory_file_path(Root, Name, Path),
+             setup_call_cleanup(open(Path, write, S), write(S, x), close(S)) )),
+    configure_workspace(Root),
+    create_artifact('f1.md', markdown, "replaced", Replaced),
+    assertion(Replaced == created),
+    create_artifact('f51.md', markdown, "one too many", Extra),
+    assertion(Extra == refused(too_many_artifacts)).
+
+test(refusals_give_reasons,
+     [setup(create_test_workspace(Root)), cleanup(remove_test_workspace(Root))]) :-
+    configure_workspace(Root),
+    create_artifact('../outside.txt', plain_text, "x", R1),
+    assertion(R1 == refused(unsafe_path)),
+    create_artifact('bad.bin', executable, "x", R2),
+    assertion(R2 == refused(unsupported_type)),
+    create_artifact('ok.md', markdown, "x", R3),
+    assertion(R3 == created).
+
 create_test_workspace(Root) :-
     tmp_file(mnn3_test_workspace, Root),
     make_directory(Root),
